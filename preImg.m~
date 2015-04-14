@@ -15,8 +15,8 @@ function result = preImg(file)
         img = ~img;
     end
     % eliminate small objects on the image
-    ratio = size(img,1)/1000;
-    img = imresize(img, size(img)/ratio);
+    tempsize(img,1)/1000;
+    img = imresize(img, size(img)
     img = bwareaopen(img,100);
     
     %% use connected component of a graph to find the segmentation
