@@ -14,30 +14,29 @@ function result = preImg(file)
     if sum(img(:)) > numel(img)*0.5
         img = ~img;
     end
-    % eliminate the noises
-    img = bwareaopen(img,4);
-    % turn to gray scale
-    imgback = 255* uint8(img);
-    % imshow(imgback);
-
-    %% find the segmentation
-    %compute projection in one dimension
-    project_x = sum(img);
-    seg_x = findEdge(project_x);
-
-    result = zeros(50, 50, length(seg_x)/2);
-
-    % seperate each charactor
-    for i = 1:length(seg_x)/2
-       temp = imgback(:,seg_x(2*i-1)+1:seg_x(2*i)-1);
-       project_y = sum(temp,2);
-       seg_y = findEdge(project_y);
-       temp = temp(seg_y(1):seg_y(2),:);
-       temp = makeRec(temp);
-       result(:,:,i) = imresize(temp, [50 50]);
+    % eliminate small objects on the image
+    img = bwareaopen(img,100);
+    
+    %% use connected component of a graph to find the segmentation
+    s = regionprops(img, 'BoundingBox');
+    result = zeros(50, 50, length(s));
+    figure;
+    for i = 1:length(s)
+        component = int32(s(i).BoundingBox);
+        separateImg = img(component(2):component(2)+component(4), component(1):component(1)+component(3));
+        Imgback = 255 * uint8(separateImg);
+        separateImgback = makeRec(Imgback);
+        result(:, :, i) = imresize(separateImgback, [50 50], 'nearest');
     end
+    % add edge to every component of the image and reszie it to 28*28 to
+    % fit into neural network prediction
     result = addedge(result);
-%     result(result~=0)=1;
+    %% show the figures of an image
+    for i = 1: length(s)
+        subplot(5, 5, i);
+        tempImg = result(:, :, i);
+        imshow(tempImg);
+    end
 end
 
 function img = makeRec(img)
@@ -53,22 +52,6 @@ function img = makeRec(img)
     end
 end
 
-function seg = findEdge(project_x) 
-    %find each number's start point and end point
-    %blank means wish to find blank (project == 0)
-    seg = 0;
-    num = 1;
-    blank = false;
-    for i = 1:length(project_x)
-        if (project_x(i) == 0) == blank
-            seg(num) = i;
-            num = num + 1;
-            blank = ~blank;
-        end
-            
-    end
-end
-
 function newImgs = addedge(imgs)
     % add an 50% margin to each side of the image
     zeroline = zeros(15, 50);
@@ -76,17 +59,11 @@ function newImgs = addedge(imgs)
     newImgs = zeros(28, 28, size(imgs,3));
     for i = 1:size(imgs, 3)
         temp = [zeroline;imgs(:,:,i);zeroline];
-        temp = abs(imresize([zerocolumn temp zerocolumn], [28 28], 'bilinear'));
+        temp = abs(imresize([zerocolumn temp zerocolumn], [28 28]));
         %normalize to match the training data
         newImgs(:,:,i) = sqrt(temp/(max(temp(:)) - min(temp(:))));
     end
-end
-     
-     
-     
-     
-     
-     
+end   
      
      
     
