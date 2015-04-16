@@ -17,12 +17,11 @@ function result = preImg(file)
     % eliminate small objects on the image
     ratio = size(img,1)/1000;
     img = imresize(img, size(img)/ratio);
-    img = bwareaopen(img,100);
+    img = bwareaopen(img,300);
     
     %% use connected component of a graph to find the segmentation
     s = regionprops(img, 'BoundingBox');
     result = zeros(50, 50, length(s));
-    figure;
     for i = 1:length(s)
         component = int32(s(i).BoundingBox);
         separateImg = img(component(2):component(2)+component(4), component(1):component(1)+component(3));
@@ -34,11 +33,11 @@ function result = preImg(file)
     % fit into neural network prediction
     result = addedge(result);
     %% show the figures of an image
-    for i = 1: length(s)
-        subplot(5, 5, i);
-        tempImg = result(:, :, i);
-        imshow(tempImg);
-    end
+%     for i = 1: length(s)
+%         subplot(5, 5, i);
+%         tempImg = result(:, :, i);
+%         imshow(tempImg);
+%     end
 end
 
 function img = makeRec(img)

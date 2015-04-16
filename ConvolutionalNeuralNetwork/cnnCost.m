@@ -70,7 +70,6 @@ activations = zeros(convDim,convDim,numFilters,numImages);
 % subsampled activations
 activationsPooled = zeros(outputDim,outputDim,numFilters,numImages);
 
-%%% YOUR CODE HERE %%%
 poolFilter = ones(poolDim)/(poolDim.^2);
 for imageNum = 1:numImages
   for filterNum = 1:numFilters
@@ -132,18 +131,17 @@ cost = 0; % save objective into cost
 %  plot the results
 % bar(sigmoid(probs))
 
+probs = exp(probs);
+probs = bsxfun(@rdivide, probs, sum(probs));
+groundTruth = full(sparse(labels, 1:numImages, 1));
+cost = - 1/numImages * groundTruth(:)' * log(probs(:));
+
 if pred
     [~,preds] = max(sigmoid(probs),[],1);
     preds = preds';
     grad = 0;
     return;
 end;
-%%% YOUR CODE HERE %%%
-probs = exp(probs);
-probs = bsxfun(@rdivide, probs, sum(probs));
-groundTruth = full(sparse(labels, 1:numImages, 1));
-cost = - 1/numImages * groundTruth(:)' * log(probs(:));
-
 
 
 %%======================================================================
@@ -178,7 +176,7 @@ end
 %  a filter in the convolutional layer, convolve the backpropagated error
 %  for that filter with each image and aggregate over images.
 
-%%% YOUR CODE HERE %%%2
+%%% YOUR CODE HERE %%%
 Wd_grad = delta_d * activationsPooled'/numImages;
 bd_grad = sum(delta_d, 2)/numImages;
 
